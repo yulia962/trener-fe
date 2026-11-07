@@ -1,0 +1,939 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Тренажёр ФЕ</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Literata:ital,opsz,wght@1,7..72,500;1,7..72,600&family=Unbounded:wght@500;600&display=swap">
+<style>
+/* Layout: одна колонка до 760px; карточка устроена как словарная статья, акцент — синяя «шариковая» ручка и жёлтый маркер, как выделение идиом в тексте пособия */
+:root{
+  --paper:#F2F4F8; --card:#FFFFFF; --ink:#18213A; --muted:#5A647C; --line:#D7DDE8;
+  --pen:#2848C8; --pen-soft:#E3E8FA; --on-pen:#FFFFFF;
+  --marker:#FFE05A; --on-marker:#1E1C10; --mark-top:38%; --mark-ink:#18213A;
+  --ok:#14794B; --ok-soft:#DAF1E4; --bad:#BC372D; --bad-soft:#FBE3E0;
+  --i-ink:#18213A; --i-soft:#D5E1F5; --i-mark:#FFD94D; --i-red:#EC6B5C; --i-green:#86C98A;
+  --i-grey:#97A1B5; --i-wood:#CFA06A; --i-metal:#B9C3D4; --i-paper:#FFFFFF;
+  --f-display:"Unbounded","Golos Text",system-ui,sans-serif;
+  --f-head:"Literata",Georgia,"Times New Roman",serif;
+  --f-body:"Golos Text",system-ui,"Segoe UI",Roboto,Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#10141C; --card:#1A2030; --ink:#E5E9F2; --muted:#A1AABE; --line:#2D3546;
+    --pen:#8FA5FF; --pen-soft:#232E55; --on-pen:#0D1428;
+    --marker:#E6C83F; --on-marker:#1E1C10; --mark-top:6%; --mark-ink:#1E1C10;
+    --ok:#5BCB8E; --ok-soft:#163A29; --bad:#FF8C80; --bad-soft:#42201C;
+    --i-ink:#E5E9F2; --i-soft:#2B3754; --i-mark:#E3C23B; --i-red:#D7604F; --i-green:#4E9F5A;
+    --i-grey:#6F7A93; --i-wood:#A47A4A; --i-metal:#7E8AA0; --i-paper:#1A2030;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#10141C; --card:#1A2030; --ink:#E5E9F2; --muted:#A1AABE; --line:#2D3546;
+  --pen:#8FA5FF; --pen-soft:#232E55; --on-pen:#0D1428;
+  --marker:#E6C83F; --on-marker:#1E1C10; --mark-top:6%; --mark-ink:#1E1C10;
+  --ok:#5BCB8E; --ok-soft:#163A29; --bad:#FF8C80; --bad-soft:#42201C;
+  --i-ink:#E5E9F2; --i-soft:#2B3754; --i-mark:#E3C23B; --i-red:#D7604F; --i-green:#4E9F5A;
+  --i-grey:#6F7A93; --i-wood:#A47A4A; --i-metal:#7E8AA0; --i-paper:#1A2030;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font:16px/1.5 var(--f-body);
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.app{max-width:760px;margin:0 auto;padding-block:20px 40px;display:flex;flex-direction:column;gap:18px}
+button,input{font:inherit;color:inherit}
+a{color:var(--pen);text-underline-offset:3px}
+a.btn{text-decoration:none;color:var(--ink);display:inline-flex;align-items:center}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--pen);outline-offset:2px}
+
+/* шапка */
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 20px}
+.brand h1{margin:0;font:600 1.45rem/1.15 var(--f-display);letter-spacing:-.01em}
+.brand p{margin:4px 0 0;color:var(--muted);font-size:.92rem}
+.brand p b{font-weight:600;color:var(--ink)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--card);gap:2px}
+.seg button{border:0;background:transparent;border-radius:999px;padding:6px 14px;font-size:.9rem;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.grade{display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.grade span{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+
+/* режимы */
+.modes{display:flex;flex-wrap:wrap;gap:6px 6px;border-bottom:1px solid var(--line);padding-bottom:10px}
+.modes a{color:var(--muted);text-decoration:none;padding:6px 10px;border-radius:6px;font-size:.93rem;white-space:nowrap}
+.modes a:hover{background:var(--pen-soft);color:var(--ink)}
+.modes a[aria-current="page"]{background:var(--pen);color:var(--on-pen);font-weight:500}
+
+/* инструкция */
+.instr{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
+.instr .en{margin:0;font-weight:500;flex:1 1 320px;min-width:0}
+.instr .ru{margin:0;color:var(--muted);flex-basis:100%}
+.linkbtn{border:0;background:none;padding:0;color:var(--pen);font-size:.88rem;text-decoration:underline;text-underline-offset:3px}
+
+/* общие блоки */
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.row.between{justify-content:space-between}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:6px;padding:9px 16px;font-weight:500}
+.btn:hover{border-color:var(--pen)}
+.btn.primary{background:var(--pen);border-color:var(--pen);color:var(--on-pen)}
+.btn.quiet{border-color:transparent;background:transparent;color:var(--muted)}
+.btn[disabled]{opacity:.45;cursor:default}
+.meta{font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.label{font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 2px}
+.mark{background:linear-gradient(transparent var(--mark-top), var(--marker) var(--mark-top), var(--marker) 92%, transparent 92%);color:var(--mark-ink);padding:0 2px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.hw{font:italic 600 clamp(1.5rem, 4.6vw, 2rem)/1.15 var(--f-head);margin:0;text-wrap:balance}
+.illo-wrap{max-width:320px;width:100%;margin:0 auto;background:var(--paper);border-radius:8px;padding:8px}
+
+/* карточка */
+.card{display:flex;flex-direction:column;gap:14px;cursor:pointer;min-height:320px}
+.card.front{align-items:center;text-align:center;justify-content:center}
+.card .hint{margin:0;color:var(--muted);font-size:.88rem}
+.card.back{cursor:default}
+.entry{display:grid;grid-template-columns:7.5rem 1fr;gap:10px 16px;margin:0}
+.entry dt{font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);padding-top:.25rem}
+.entry dd{margin:0;min-width:0}
+.entry .en-def{font-family:var(--f-head);font-style:italic}
+.method{display:inline-block;font-size:.78rem;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 6px;margin-left:4px;white-space:normal}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;padding:2px 10px;border-radius:999px;background:var(--pen-soft);color:var(--ink)}
+.chip.unsure{background:var(--marker);color:var(--on-marker)}
+.chip.know{background:var(--ok-soft);color:var(--ok)}
+.out{color:var(--pen)}
+@media (max-width:520px){ .entry{grid-template-columns:1fr;gap:2px} .entry dd{margin-bottom:10px} .panel{padding:16px} }
+
+/* викторина */
+.qhead{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.progress{height:4px;background:var(--line);border-radius:2px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--pen);width:0;transition:width .3s}
+.prompt{display:flex;flex-direction:column;gap:12px;align-items:stretch}
+.prompt .sent{font-size:1.15rem;line-height:1.55;margin:0}
+.prompt .gloss{color:var(--muted);font-style:italic}
+.blank{display:inline-block;min-width:4.5em;border-bottom:2px solid var(--ink);text-align:center}
+.opts{display:grid;grid-template-columns:repeat(var(--cols,2),minmax(0,1fr));gap:8px}
+@media (max-width:560px){ .opts{grid-template-columns:1fr} }
+.fb-slot{display:flex;flex-direction:column;gap:14px}
+.fb-slot:empty{display:none}
+.opt{text-align:left;border:1px solid var(--line);background:var(--card);border-radius:8px;padding:12px 14px;font-size:1rem;min-width:0;overflow-wrap:anywhere}
+.opt.en{font-family:var(--f-head);font-style:italic;font-size:1.08rem}
+.opt:hover:not([disabled]){border-color:var(--pen);background:var(--pen-soft)}
+.opt[disabled]{cursor:default}
+.opt.is-right{border-color:var(--ok);background:var(--ok-soft);color:var(--ink)}
+.opt.is-wrong{border-color:var(--bad);background:var(--bad-soft);color:var(--ink)}
+.fb{border-left:4px solid var(--line);padding:4px 0 4px 14px;display:flex;flex-direction:column;gap:6px}
+.fb.ok{border-color:var(--ok)}
+.fb.no{border-color:var(--bad)}
+.fb p{margin:0}
+.fb .verdict{font-weight:600}
+.fb.ok .verdict{color:var(--ok)}
+.fb.no .verdict{color:var(--bad)}
+.answer{display:flex;flex-wrap:wrap;gap:8px}
+.answer input{flex:1 1 200px;min-width:0;border:1px solid var(--line);border-radius:6px;padding:9px 12px;background:var(--paper)}
+.tokens{display:flex;flex-wrap:wrap;gap:6px;font-size:1.12rem}
+.tok{border:1px dashed transparent;background:transparent;border-radius:6px;padding:4px 6px}
+.tok:hover:not([disabled]){border-color:var(--pen);background:var(--pen-soft)}
+.tok[disabled]{cursor:default}
+.tok.is-right{background:var(--ok-soft);border-color:var(--ok);border-style:solid}
+.tok.is-wrong{background:var(--bad-soft);border-color:var(--bad);border-style:solid;text-decoration:line-through}
+.result{display:flex;flex-direction:column;gap:12px}
+.big{font:600 2.4rem/1 var(--f-display);font-variant-numeric:tabular-nums;margin:0}
+.missed{margin:0;padding-left:1.2em}
+.missed li{font-family:var(--f-head);font-style:italic}
+
+/* повторение */
+.ladder{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.step{border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.step b{font:600 1.35rem/1.1 var(--f-display);font-variant-numeric:tabular-nums}
+.step span{font-size:.78rem;color:var(--muted);line-height:1.25}
+.step.due{border-color:var(--pen);background:var(--pen-soft)}
+@media (max-width:520px){ .ladder{grid-template-columns:repeat(2,minmax(0,1fr))} .ladder .step:first-child{grid-column:1 / -1} }
+.confirm{border:1px solid var(--bad);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.demo{border-top:1px dashed var(--line);padding-top:12px}
+
+/* игра */
+.scores{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+.team{border:1px solid var(--line);border-radius:8px;padding:8px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.team b{font:600 1.5rem/1 var(--f-display);font-variant-numeric:tabular-nums}
+.team.active{border-color:var(--pen);background:var(--pen-soft);box-shadow:inset 0 0 0 1px var(--pen)}
+.timer{display:flex;align-items:center;gap:10px}
+.timer .bar{flex:1;height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+.timer .bar i{display:block;height:100%;background:var(--pen);transition:width .25s linear}
+.timer .bar i.low{background:var(--bad)}
+.timer b{font:600 1.2rem/1 var(--f-display);font-variant-numeric:tabular-nums;min-width:2.2ch;text-align:right}
+.game .prompt .sent{font-size:1.35rem}
+.game .opt{font-size:1.15rem;padding:16px}
+.setup{display:flex;flex-direction:column;gap:14px}
+.setup fieldset{border:0;padding:0;margin:0;display:flex;flex-direction:column;gap:6px}
+.setup legend{font-weight:500;margin-bottom:6px;padding:0}
+
+footer{font-size:.82rem;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+footer p{margin:0 0 4px}
+
+/* иллюстрации */
+.illo{width:100%;height:auto;display:block;fill:none;stroke:var(--i-ink);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.illo .thin{stroke-width:2}
+.illo .hair{stroke-width:1.5}
+.illo .dash{stroke-dasharray:4 6}
+.illo .g{stroke:var(--i-grey)}
+.illo .ns{stroke:none}
+.illo .f-soft{fill:var(--i-soft)} .illo .f-mark{fill:var(--i-mark)} .illo .f-red{fill:var(--i-red)}
+.illo .f-green{fill:var(--i-green)} .illo .f-grey{fill:var(--i-grey)} .illo .f-wood{fill:var(--i-wood)}
+.illo .f-metal{fill:var(--i-metal)} .illo .f-paper{fill:var(--i-paper)} .illo .f-ink{fill:var(--i-ink)}
+.illo .t{fill:var(--i-ink);stroke:none;font:600 14px var(--f-body)}
+
+@media (prefers-reduced-motion: reduce){ *{transition:none!important;animation:none!important} }
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <h1>Тренажёр ФЕ</h1>
+      <p><b>Модуль 1. Emotions and Reactions</b> · 20 фразеологических единиц</p>
+    </div>
+    <div class="grade">
+      <span id="grade-label">Класс</span>
+      <div class="seg" role="group" aria-labelledby="grade-label">
+        <button type="button" id="g9" data-grade="9">9 класс</button>
+        <button type="button" id="g11" data-grade="11">10–11 классы</button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="modes" aria-label="Режимы">
+    <a href="#cards" data-mode="cards">Карточки</a>
+    <a href="#picture" data-mode="picture">Что на картинке?</a>
+    <a href="#origin" data-mode="origin">Откуда выражение?</a>
+    <a href="#gap" data-mode="gap">Собери выражение</a>
+    <a href="#mistakes" data-mode="mistakes">Найди ошибку</a>
+    <a href="#review" data-mode="review">Повторение</a>
+    <a href="#game" data-mode="game">Командная игра</a>
+  </nav>
+
+  <div class="instr" id="instr"></div>
+  <main id="view" class="panel" aria-live="polite"></main>
+
+  <footer>
+    <p>Прототип для обсуждения: модуль 1 из 8, иллюстрации черновые. Тексты карточек взяты из методического пособия, дефиниции из Cambridge Dictionary.</p>
+    <p>Прогресс хранится только в этом браузере. Регистрации нет, данные об учениках не собираются.</p>
+  </footer>
+</div>
+
+<script>
+/* ===================== Материал модуля 1 (из пособия) ===================== */
+const IDIOMS = [
+ {id:"moon", en:"over the moon", def:"extremely happy and pleased.", ru:"на седьмом небе от счастья", method:"фразеологический аналог",
+  ex:"Sarah was [[over the moon]] when she got the lead role in the school play.", gap:"moon", gapAlt:["sky","stars"],
+  img:"Корова, перепрыгивающая через луну – фигура из детского стишка, парящая высоко над землёй.",
+  note:"Восходит к английскому детскому стишку «Hey Diddle Diddle» («the cow jumped over the moon»). Как идиома для обозначения крайней радости закрепилась в разговорной речи, особенно в спортивных репортажах и комментариях британских СМИ середины XX века.",
+  url:"https://dictionary.cambridge.org/dictionary/english/be-over-the-moon"},
+ {id:"envy", en:"green with envy", def:"wishing very much that you had what someone else has.", ru:"зелен от зависти", method:"нефразеологический перевод; калькирование",
+  ex:"When Tom saw his brother's new bike, he was [[green with envy]].", gap:"envy", gapAlt:["anger","fear"],
+  img:"Лицо человека, окрашенное в зелёный цвет.",
+  note:"Связь зелёного цвета с завистью восходит к античной медицине: избыток жёлчи (одного из четырёх «телесных соков») считался причиной бледно-зеленоватого цвета лица. Выражение закрепил Шекспир, назвавший ревность «зеленоглазым чудовищем» (Отелло, 1604).",
+  url:"https://dictionary.cambridge.org/dictionary/english/green-with-envy"},
+ {id:"mind", en:"be out of your mind", def:"to be extremely worried, upset, angry, etc., or (informally) to be behaving in a very foolish way.", ru:"быть не в себе", method:"фразеологический аналог",
+  ex:"You're [[out of your mind]] if you think you can finish this project in one night!", gap:"mind", gapAlt:["face","voice"],
+  img:"Силуэт человека, из головы которого «выходит» и парит отдельно небольшая фигурка-разум.",
+  note:"Прозрачная метафора: рассудок мыслится как нечто, способное покинуть тело. Один из самых частотных фразеологизмов в корпусе COCA – 2,77 на миллион словоупотреблений [Rafatbakhsh & Ahmadi, 2019].",
+  url:"https://dictionary.cambridge.org/dictionary/english/out-of-mind"},
+ {id:"straight", en:"keep a straight face", def:"to manage to stop yourself from smiling or laughing.", ru:"держать лицо", method:"фразеологический эквивалент",
+  ex:"It was hard to [[keep a straight face]] when Tom imitated the teacher.", gap:"straight", gapAlt:["long","bright"],
+  img:"Лицо, расчерченное ровной прямой линией вместо изогнутой линии улыбки.",
+  note:"Идиома опирается на буквальный контраст между «прямой» (straight) линией рта в нейтральном выражении и изогнутой линией при улыбке или смехе. Закрепилась в английском языке в XIX веке в контексте актёрской игры и умения сохранять невозмутимость на сцене.",
+  url:"https://dictionary.cambridge.org/us/dictionary/english/keep-a-straight-face"},
+ {id:"red", en:"go bright red", def:"a sudden reddening of the face, usually as a result of shame, embarrassment or anger.", ru:"покраснеть", method:"нефразеологический перевод; описательный перевод",
+  ex:"She [[went bright red]] when she forgot her lines in the play.", gap:"red", gapAlt:["green","white"],
+  img:"Термометр в форме лица, у которого «столбик» краски поднимается вверх, окрашивая щёки.",
+  note:"Физиологическая идиома без сложной культурной истории: описывает буквальный прилив крови к лицу при сильных эмоциях. Хороша как пример идиомы, полностью мотивированной телесной реакцией, а не культурным образом.",
+  url:"https://dictionary.cambridge.org/dictionary/english/go-turn-bright-red"},
+ {id:"collar", en:"hot under the collar", def:"embarrassed or angry about something.", ru:"злиться", method:"нефразеологический перевод; описательный перевод",
+  ex:"Dad was [[hot under the collar]] when he saw the broken window.", gap:"collar", gapAlt:["hat","coat"],
+  img:"Мужчина в тугом накрахмаленном воротничке, из-под которого идёт пар.",
+  note:"Отсылает к жёстким крахмальным воротничкам мужских рубашек XIX века, которые физически становились ощутимо горячими и тесными, когда человек нервничал или гневался.",
+  url:"https://dictionary.cambridge.org/us/dictionary/english/hot-under-the-collar"},
+ {id:"side", en:"look on the bright side", def:"to find good things in a bad situation.", ru:"смотреть на вещи позитивно", method:"нефразеологический перевод; описательный перевод",
+  ex:"[[Look on the bright side]] – at least we've learned from our mistakes!", gap:"side", gapAlt:["part","way"],
+  img:"Один и тот же предмет, одна сторона которого залита светом, другая – в тени.",
+  note:"Использует универсальную концептуальную метафору «светлое – хорошее, тёмное – плохое», характерную для многих языков. Хороший пример для демонстрации когнитивного подхода к идиомам: образ понятен без перевода, поскольку опирается на общечеловеческий, а не культурно-специфический опыт.",
+  url:"https://dictionary.cambridge.org/us/dictionary/english/look-on-the-bright-side"},
+ {id:"laugh", en:"laugh your head off", def:"to laugh very hard, uncontrollably.", ru:"умереть со смеха", method:"фразеологический аналог",
+  ex:"We [[laughed our heads off]] at the comedy show.", gap:"heads", gapAlt:["head","hats"],
+  img:"Голова, буквально отделяющаяся от плеч и подпрыгивающая рядом со смеющимся человеком.",
+  note:"Гипербола того же типа, что и work your fingers to the bone или cry your eyes out – типичная для английского языка модель усиления через образ «отделяющейся части тела».",
+  syntax:"Глагольная форма и притяжательное местоимение согласуются с подлежащим: laugh my head off / laugh your head off / laugh her head off.",
+  url:"https://dictionary.cambridge.org/dictionary/english/laugh-head-off"},
+ {id:"long", en:"have a long face", def:"to look sad or unhappy.", ru:"грустить, хандрить", method:"нефразеологический перевод; описательный перевод",
+  ex:"Why the [[long face]]? Did something happen?", gap:"long", gapAlt:["sad","short"],
+  img:"Лицо, физически вытянутое вниз, как на карикатуре.",
+  note:"Опирается на буквальное наблюдение: опущенные уголки рта и бровей визуально «удлиняют» лицо. Один из самых наглядных примеров идиомы, основанной на мимике, а не на культурной отсылке.",
+  url:"https://dictionary.cambridge.org/dictionary/english/long-face"},
+ {id:"seat", en:"on the edge of your seat", def:"excitedly anticipating something; anxiously watching.", ru:"с замиранием сердца", method:"фразеологический аналог",
+  ex:"The thriller kept us [[on the edge of our seats]]!", gap:"edge", gapAlt:["end","back"],
+  img:"Зритель в кинозале, сидящий на самом краешке кресла, подавшись вперёд к экрану.",
+  note:"Идиома описывает буквальную позу зрителя, поглощённого напряжённым сюжетом – наклон вперёд, к самому краю сиденья. Закрепилась в языке кино и театральной критики.",
+  url:"https://dictionary.cambridge.org/dictionary/english/on-the-edge-of-seat"},
+ {id:"chin", en:"keep your chin up", def:"to stay positive and hopeful in a difficult situation.", ru:"не падай духом", method:"фразеологический аналог",
+  ex:"[[Keep your chin up]]! The exam results will be better next time.", gap:"chin", gapAlt:["nose","hand"],
+  img:"Фигура человека с поднятым вверх подбородком, в противовес фигуре с опущенной головой.",
+  note:"Связана с языком телесной осанки: поднятый подбородок традиционно ассоциируется с уверенностью, опущенный – с унынием. Выражение получило широкое распространение как фраза морального подбадривания в Великобритании во время Первой мировой войны.",
+  url:"https://dictionary.cambridge.org/dictionary/english/chin-up"},
+ {id:"cloud", en:"on cloud nine", def:"extremely happy and excited.", ru:"на седьмом небе от счастья", method:"фразеологический аналог",
+  ex:"She was [[on cloud nine]] after winning the dance competition.", gap:"nine", gapAlt:["seven","ten"],
+  img:"Человек, парящий над облаками, сидя на самом верхнем, девятом облаке.",
+  note:"По данным Collins COBUILD Idioms Dictionary, выражение предположительно связано с десятичастной классификацией облаков, в которой кучево-дождевые облака (cumulonimbus, «cloud nine») занимали второе место по высоте – а не первое, как иногда неточно пересказывают. The American Heritage Dictionary of Idioms при этом уточняет, что точная причина выбора именно числа «девять» не установлена: в середине XX века наравне с «cloud nine» использовались варианты «cloud seven» и «cloud eight». Устойчиво идиома фиксируется в американском разговорном языке с 1950-х годов.",
+  syntax:"Синонимична over the moon – при подаче обеих единиц в одном модуле стоит явно провести разграничение в частотности и стилистике, а не преподносить как полные дубликаты.",
+  url:"https://dictionary.cambridge.org/dictionary/english/be-on-cloud-nine"},
+ {id:"skin", en:"jump out of your skin", def:"to be extremely startled or surprised by something.", ru:"испугаться до смерти", method:"фразеологический аналог",
+  ex:"The loud noise made me [[jump out of my skin]]!", gap:"skin", gapAlt:["clothes","seat"],
+  img:"Человек, чьё тело буквально выпрыгивает вперёд, оставляя позади пустую оболочку кожи.",
+  note:"Яркая гипербола, представляющая испуг как физическое отделение тела от кожи – образ, который легко визуализировать и запомнить, что делает идиому хорошим примером для когнитивного подхода к подаче материала.",
+  syntax:"Притяжательное местоимение согласуется с подлежащим: jump out of my/your/her skin.",
+  url:"https://dictionary.cambridge.org/dictionary/english/jump-out-of-skin"},
+ {id:"stiff", en:"scared stiff", def:"extremely frightened.", ru:"напуган до смерти", method:"фразеологический аналог",
+  ex:"I was [[scared stiff]] during the horror movie.", gap:"stiff", gapAlt:["still","cold"],
+  img:"Фигура человека, застывшая в напряжённой позе, как деревянная кукла.",
+  note:"Образ восходит к буквальному физиологическому эффекту сильного испуга – временному мышечному оцепенению («столбняку» от страха), знакомому во многих языках (ср. рус. «оцепенеть от страха»).",
+  url:"https://dictionary.cambridge.org/us/dictionary/english/stiff"},
+ {id:"spirits", en:"be in high spirits", def:"to be extremely happy and enjoying the situation.", ru:"быть в хорошем расположении духа", method:"нефразеологический перевод; описательный перевод",
+  ex:"After winning the championship, the team was [[in high spirits]].", gap:"spirits", gapAlt:["spirit","moods"],
+  img:"Фигура человека, над головой которой поднимается лёгкое светящееся облачко-«дух».",
+  note:"Восходит к средневековому представлению о «телесных духах» (spirits) – тонких субстанциях, определяющих, согласно старой физиологии, настроение и жизненную силу человека. Та же система понятий лежит в основе идиомы green with envy.",
+  url:"https://dictionary.cambridge.org/us/dictionary/english/in-high-spirits"},
+ {id:"wall", en:"drive someone up the wall", def:"to make someone extremely annoyed or angry.", ru:"доводить кого-то до белого каления", method:"фразеологический аналог",
+  ex:"His constant whistling [[drives me up the wall]]!", gap:"wall", gapAlt:["roof","hill"],
+  img:"Человек, которого будто в буквальном смысле подталкивают вверх по вертикальной стене.",
+  note:"Пространственная гипербола: раздражение настолько сильно, что «выталкивает» человека вверх, на стену – образ, близкий по механизму к drive someone crazy.",
+  syntax:"Требует дополнения местоимением/существительным между drive и up the wall: drive me/him/the whole family up the wall.",
+  url:"https://dictionary.cambridge.org/us/dictionary/english/drive-up-the-wall"},
+ {id:"feet", en:"get cold feet", def:"to suddenly become too frightened to do something you had planned to do, especially something important such as getting married.", ru:"струсить в последний момент", method:"нефразеологический перевод; описательный перевод",
+  ex:"He was all set to go skydiving, but he [[got cold feet]] right before the jump.", gap:"feet", gapAlt:["foot","hands"],
+  img:"Пара ботинок, из которых буквально идёт морозный пар холода, пока их владелец колеблется у двери.",
+  note:"Точное происхождение неоднозначно: по одной из версий восходит к военному сленгу – «замёрзшие ноги» солдат перед атакой как символ нерешительности; фиксируется в англоязычной прессе с конца XIX века.",
+  url:"https://dictionary.cambridge.org/us/dictionary/english/get-cold-feet"},
+ {id:"butterflies", en:"have butterflies in your stomach", def:"to have a feeling of nervous excitement before doing something important.", ru:"бабочки в животе", method:"нефразеологический перевод; калькирование",
+  ex:"I always [[have butterflies in my stomach]] before a job interview.", gap:"butterflies", gapAlt:["butterfly","bees"],
+  img:"Силуэт человека, внутри которого летают бабочки.",
+  note:"Описывает буквальное трепещущее ощущение в животе при волнении. Показательный пример идиомы с почти универсальным телесным образом: калька «бабочки в животе» уже закрепилась и в разговорном русском языке, что удобно показать учащимся как случай межъязыкового совпадения образности.",
+  url:"https://dictionary.cambridge.org/us/dictionary/english/butterflies-in-stomach"},
+ {id:"dumps", en:"be down in the dumps", def:"to feel unhappy, without any particular reason.", ru:"повесить нос", method:"фразеологический аналог",
+  ex:"She's been [[down in the dumps]] ever since her best friend moved away.", gap:"dumps", gapAlt:["dark","holes"],
+  img:"Человек, сидящий на дне глубокой ямы-свалки (dump).",
+  note:"Слово dumps в значении «уныние, подавленное состояние» – устаревшее английское слово, зафиксированное уже у Шекспира («Ромео и Джульетта»). Буквальный образ современного dump (свалка, яма) удачно накладывается на переносное значение «низкого», подавленного настроения.",
+  url:"https://dictionary.cambridge.org/us/dictionary/english/down-in-the-dumps"},
+ {id:"handle", en:"fly off the handle", def:"to suddenly become very angry.", ru:"слететь с катушек", method:"фразеологический аналог",
+  ex:"He [[flew off the handle]] when he saw the parking ticket.", gap:"handle", gapAlt:["hinges","wheel"],
+  img:"Топор, у которого металлическая головка буквально слетает с деревянной рукояти во время замаха.",
+  note:"Происходит из практики использования топоров с непрочно закреплённым топорищем: плохо насаженное лезвие могло неожиданно и опасно слететь с рукояти во время удара – образ внезапной, неконтролируемой вспышки. Выражение закрепилось в американском английском в XIX веке.",
+  syntax:"Русский аналог «слететь с катушек» в живой речи чуть шире по значению (может означать и «повести себя странно/неадекватно», не только «разозлиться») – при подаче стоит уточнить с учащимися более узкое значение английской идиомы.",
+  url:"https://dictionary.cambridge.org/dictionary/english/fly-off-the-handle"}
+];
+const BY = Object.fromEntries(IDIOMS.map(i=>[i.id,i]));
+
+/* «Откуда выражение?»: первый вариант верный (по справкам пособия), два других – отвлекающие и неверные */
+const ORIGINS = {
+ moon:["Детский стишок «Hey Diddle Diddle», в котором корова прыгает через луну","Астрономы XIX века так называли удачное наблюдение Луны в телескоп","Моряки говорили так о полнолунии, которое сулило удачный рейс"],
+ envy:["Античная медицина: считалось, что избыток жёлчи делает лицо зеленоватым; выражение закрепил Шекспир","Цвет денежных купюр: человек завидует чужим деньгам","Цвет незрелых яблок, которые нельзя есть"],
+ mind:["Прозрачная метафора: рассудок будто может покинуть тело","Медицинский термин XVIII века для потери памяти после удара","Театральная ремарка: актёр забыл роль и ушёл со сцены"],
+ straight:["Прямая линия рта в нейтральном выражении против изогнутой линии улыбки","Правило военного строя: смотреть строго прямо","Портретная живопись: модели нельзя было поворачивать голову"],
+ red:["Буквальная телесная реакция: прилив крови к лицу при сильных эмоциях","Красные чернила, которыми учителя исправляли ошибки","Красный флаг как знак опасности на стройке"],
+ collar:["Жёсткие крахмальные воротнички XIX века, в которых становилось жарко и тесно от волнения","Кузнецы, работавшие у горна в рубашках с высоким воротом","Судьи в мантиях на летних заседаниях"],
+ side:["Общая для многих языков метафора: светлое – хорошее, тёмное – плохое","Совет фотографам снимать с освещённой стороны улицы","Поговорка жителей северных стран о полярной ночи"],
+ laugh:["Гипербола: от сильного смеха будто отделяется часть тела, как в cry your eyes out","Кукольный театр, где у смеющейся куклы отваливалась голова","Цирковой номер с механической головой клоуна"],
+ long:["Наблюдение за мимикой: опущенные уголки рта и брови будто вытягивают лицо","Лошадиная морда: лошади всегда выглядят печальными","Вытянутые лица на старинных портретах"],
+ seat:["Поза зрителя, который подался вперёд к экрану или сцене","Неустойчивые табуреты в старых английских пабах","Правило этикета: гость садится на край стула, пока хозяин не пригласит"],
+ chin:["Язык тела: поднятый подбородок связан с уверенностью; фраза стала популярной в Британии в годы Первой мировой войны","Совет пловцам держать голову над водой","Команда фотографа при съёмке на документы"],
+ cloud:["Возможно, классификация облаков, где «девятое» облако – одно из самых высоких; точная причина числа не установлена","Номер самых дорогих мест на трибуне стадиона","Девятый этаж первых американских небоскрёбов"],
+ skin:["Гипербола: от испуга тело будто выпрыгивает из кожи","Змеи, которые сбрасывают кожу от испуга","Кожаные доспехи, которые воины сбрасывали при бегстве"],
+ stiff:["Реальная реакция на сильный испуг: мышцы на миг цепенеют","Накрахмаленные воротники, в которых нельзя повернуть голову","Деревянные марионетки с оборванными нитями"],
+ spirits:["Старая физиология: тонкие «телесные духи» (spirits) будто определяли настроение","Крепкие напитки (spirits) на праздничном столе","Призраки (spirits), которые, по поверьям, жили на высоких башнях"],
+ wall:["Пространственная гипербола: раздражение будто выталкивает человека вверх по стене","Мотогонщики, ездившие по вертикальной стене в цирке","Пастухи, загонявшие овец на каменную ограду"],
+ feet:["Происхождение неоднозначно; по одной из версий – замёрзшие ноги солдат перед атакой","Свадебный обычай разуваться перед входом в церковь","Рыбаки, часами стоявшие в ледяной воде"],
+ butterflies:["Буквальное трепещущее ощущение в животе при волнении","Примета: съесть бабочку – к удаче","Моль в старых шкафах, которую находили перед праздником"],
+ dumps:["Устаревшее слово dumps – «уныние», известное ещё у Шекспира; образ свалки лёг на него позже","Угольные шахты с низкими тёмными забоями","Сленг моряков о трюме корабля"],
+ handle:["Топор с плохо насаженным лезвием, которое слетало с рукояти при ударе","Ручка кастрюли, слетавшая при кипении","Дверная ручка, которую срывали, хлопнув дверью"]
+};
+
+/* «Найди ошибку»: 1–8 – упражнение 12 пособия, остальные – типичные кальки с русского */
+const MISTAKES = [
+ {s:"She was green from envy when she saw my new phone.", w:"from", right:"green with envy", fix:"with", c:"По-русски «зелёный от зависти», но в идиоме with."},
+ {s:"I was on cloud seven after the concert.", w:"seven", right:"on cloud nine", fix:"nine", c:"Русское «седьмое небо» подсказывает seven, но облако девятое."},
+ {s:"Don't fly out of the handle, it was only a joke!", w:"out", right:"fly off the handle", fix:"off", c:"Лезвие слетает (off) с рукояти."},
+ {s:"The noise from the street drives up the wall me.", w:"me", right:"drives me up the wall", fix:"drives me up the wall", c:"Дополнение стоит между drive и up the wall."},
+ {s:"We laughed our head off at the film.", w:"head", right:"laughed our heads off", fix:"heads", c:"Местоимение и число согласуются с подлежащим: we … our heads."},
+ {s:"He got cold foot the day before the competition.", w:"foot", right:"got cold feet", fix:"feet", c:"Ноги замёрзли обе: feet."},
+ {s:"Keep up your chin, the test wasn't that bad.", w:"up", right:"Keep your chin up", fix:"Keep your chin up", c:"Порядок слов в идиоме постоянный: keep your chin up."},
+ {s:"I always have a butterfly in my stomach before exams.", w:"butterfly", right:"have butterflies in my stomach", fix:"butterflies", c:"Бабочек в идиоме всегда много: butterflies."},
+ {s:"Look at the bright side: nobody was hurt.", w:"at", right:"Look on the bright side", fix:"on", c:"По-русски «смотреть на…», но в идиоме look on."},
+ {s:"The film was so exciting that I sat on the edge of my chair.", w:"chair", right:"on the edge of my seat", fix:"seat", c:"Калька с «на краешке стула»; в идиоме seat."},
+ {s:"When the door slammed, I jumped out from my skin.", w:"from", right:"jumped out of my skin", fix:"of", c:"«Из кожи» – out of, а не out from."},
+ {s:"The whole class was in high spirit after the trip.", w:"spirit", right:"in high spirits", fix:"spirits", c:"Spirits во множественном числе."},
+ {s:"She was over the sky when she passed the exam.", w:"sky", right:"over the moon", fix:"moon", c:"Русское «на седьмом небе» сбивает: в английской идиоме луна."},
+ {s:"Dad got hot under the neck when he saw the bill.", w:"neck", right:"hot under the collar", fix:"collar", c:"Жарко становится под воротничком (collar)."}
+];
+
+const INSTR = {
+ cards:["Look at the picture, read the idiom and turn the card over. Mark the idioms you are not sure about.","Посмотрите на картинку, прочитайте идиому и переверните карточку. Отметьте идиомы, в которых вы не уверены."],
+ picture:["Look at the literal picture. Which idiom is behind it?","Посмотрите на буквальную картинку. Какая идиома за ней стоит?"],
+ origin:["Guess what the picture behind the idiom comes from. Then read the note.","Угадайте, на чём основан образ идиомы. Потом прочитайте справку."],
+ gap9:["Choose the missing word to complete the idiom.","Выберите пропущенное слово, чтобы восстановить идиому."],
+ gap11:["Type the missing word to complete the idiom.","Впишите пропущенное слово, чтобы восстановить идиому."],
+ mistakes9:["Each sentence has a mistake in the idiom. Tap the wrong word.","В каждом предложении ошибка в идиоме. Нажмите на неверное слово."],
+ mistakes11:["Each sentence has a mistake in the idiom. Tap the wrong word, then write the idiom correctly.","В каждом предложении ошибка в идиоме. Нажмите на неверное слово, затем напишите идиому правильно."],
+ review:["Answer the questions. The trainer will bring each idiom back in 1, 3 and 7 days.","Отвечайте на вопросы. Тренажёр вернёт каждую идиому через 1, 3 и 7 дней."],
+ game:["Play in teams. Teams answer in turn, one question each.","Играйте командами. Команды отвечают по очереди, по одному вопросу."]
+};
+
+/* ===================== Иллюстрации буквальных образов ===================== */
+function cloudPath(x,y){return `M${x+10} ${y+28} H${x+54} A10 10 0 0 0 ${x+56} ${y+10} A14 14 0 0 0 ${x+30} ${y+4} A12 12 0 0 0 ${x+8} ${y+12} A9 9 0 0 0 ${x+10} ${y+28} Z`;}
+function bfly(x,y,r){return `<g transform="translate(${x} ${y}) rotate(${r})"><ellipse class="f-mark hair" cx="-5" cy="-3" rx="5" ry="4"/><ellipse class="f-mark hair" cx="5" cy="-3" rx="5" ry="4"/><ellipse class="f-red hair" cx="-4" cy="4" rx="3.5" ry="3"/><ellipse class="f-red hair" cx="4" cy="4" rx="3.5" ry="3"/><path class="hair" d="M0 -7 V8"/></g>`;}
+const ART = {
+ moon:`<path class="dash g thin" d="M22 104 Q78 -14 142 92"/>
+  <path class="f-mark" d="M96 68 A26 26 0 1 0 96 112 A30 30 0 0 1 96 68 Z"/>
+  <g transform="translate(76 34) rotate(-12)">
+   <path class="f-paper" d="M-18 -6 Q-18 -12 -10 -12 L10 -12 Q18 -12 18 -4 L18 4 Q18 8 12 8 L-12 8 Q-18 8 -18 2 Z"/>
+   <ellipse class="f-ink ns" cx="-6" cy="-4" rx="5" ry="4"/><ellipse class="f-ink ns" cx="9" cy="2" rx="3" ry="2.5"/>
+   <path d="M-12 8 l-6 9 M-5 8 l-3 10 M6 8 l4 10 M13 8 l7 8 M-18 -6 q-8 -2 -10 -10"/>
+   <circle class="f-paper" cx="24" cy="-10" r="7"/><path class="thin" d="M21 -16 l-2 -5 M27 -16 l2 -5"/>
+   <circle class="f-ink ns" cx="26" cy="-11" r="1.4"/>
+  </g>
+  <path class="thin" d="M28 20 v8 M24 24 h8 M134 16 v8 M130 20 h8 M128 50 v6 M125 53 h6"/>`,
+ envy:`<circle class="f-green" cx="64" cy="60" r="34"/>
+  <ellipse class="f-paper" cx="54" cy="52" rx="8" ry="6"/><ellipse class="f-paper" cx="78" cy="52" rx="8" ry="6"/>
+  <circle class="f-ink ns" cx="59" cy="53" r="3"/><circle class="f-ink ns" cx="83" cy="53" r="3"/>
+  <path class="thin" d="M45 41 l14 4 M71 45 l14 -3"/><path d="M54 78 q10 -6 20 0"/>
+  <path class="thin dash g" d="M96 56 L112 66"/>
+  <rect class="f-mark" x="116" y="62" width="32" height="28" rx="2"/>
+  <path class="thin" d="M132 62 v28 M116 73 h32 M132 62 q-9 -11 -13 -2 q4 4 13 2 q9 -11 13 -2 q-4 4 -13 2"/>`,
+ mind:`<path class="f-soft" d="M24 116 Q26 90 46 85 L48 77 Q32 70 32 52 Q32 28 56 28 Q80 28 80 52 Q80 70 64 77 L66 85 Q86 90 88 116 Z"/>
+  <circle class="f-ink ns" cx="48" cy="50" r="2.5"/><circle class="f-ink ns" cx="64" cy="50" r="2.5"/><circle class="thin" cx="56" cy="63" r="3.5"/>
+  <path class="dash g thin" d="M60 26 Q80 0 112 16"/>
+  <circle class="f-mark" cx="124" cy="22" r="7"/>
+  <path class="thin" d="M124 29 v14 M116 34 l8 3 l8 -3 M124 43 l-6 9 M124 43 l6 9 M138 12 l4 -4 M140 24 h6"/>`,
+ straight:`<circle class="f-soft" cx="80" cy="60" r="38"/>
+  <circle class="f-ink ns" cx="66" cy="50" r="3.5"/><circle class="f-ink ns" cx="94" cy="50" r="3.5"/>
+  <path class="thin" d="M58 40 h14 M88 40 h14"/>
+  <path class="dash g thin" d="M60 70 Q80 92 100 70"/>
+  <path d="M60 76 H100" style="stroke-width:5"/>`,
+ red:`<circle class="f-soft" cx="62" cy="60" r="34"/>
+  <ellipse class="f-red ns" cx="44" cy="70" rx="9" ry="6"/><ellipse class="f-red ns" cx="80" cy="70" rx="9" ry="6"/>
+  <path d="M48 56 q5 4 10 0 M66 56 q5 4 10 0"/><path d="M54 82 q8 4 16 0"/>
+  <path class="thin" d="M104 52 v-20 m-5 5 l5 -5 l5 5"/>
+  <rect class="f-paper" x="122" y="14" width="14" height="76" rx="7"/>
+  <rect class="f-red ns" x="126" y="28" width="6" height="64"/>
+  <circle class="f-red" cx="129" cy="98" r="12"/>
+  <path class="thin" d="M136 30 h6 M136 46 h6 M136 62 h6"/>`,
+ collar:`<path class="g" d="M58 60 q-6 -6 0 -12 q6 -6 0 -12 M102 60 q6 -6 0 -12 q-6 -6 0 -12 M46 72 q-6 -6 0 -12 q6 -6 0 -12 M114 72 q6 -6 0 -12 q-6 -6 0 -12"/>
+  <rect class="f-soft" x="72" y="40" width="16" height="24"/>
+  <circle class="f-soft" cx="80" cy="28" r="17"/>
+  <path class="thin" d="M70 22 l7 3 M90 22 l-7 3 M74 39 h12"/>
+  <circle class="f-ink ns" cx="73" cy="29" r="2"/><circle class="f-ink ns" cx="87" cy="29" r="2"/>
+  <path class="f-paper" d="M34 118 L42 78 L66 66 L80 82 L94 66 L118 78 L126 118 Z"/>
+  <path class="f-paper" d="M67 60 L80 82 L62 88 Z"/><path class="f-paper" d="M93 60 L80 82 L98 88 Z"/>
+  <path class="f-red" d="M80 82 L74 94 L80 118 L86 94 Z"/>`,
+ side:`<circle class="f-mark" cx="26" cy="26" r="10"/>
+  <path class="thin" d="M26 10 v-5 M26 42 v5 M10 26 h-5 M42 26 h5 M15 15 l-3 -3 M37 37 l3 3 M37 15 l3 -3 M15 37 l-3 3"/>
+  <path class="dash g thin" d="M42 36 L62 48 M38 44 L56 64"/>
+  <ellipse class="f-grey ns" cx="104" cy="108" rx="30" ry="5" opacity=".5"/>
+  <circle class="f-mark" cx="92" cy="66" r="34"/>
+  <path class="f-grey ns" d="M92 32 A34 34 0 0 1 92 100 Q114 66 92 32 Z"/>
+  <circle cx="92" cy="66" r="34"/>`,
+ laugh:`<path class="f-soft" d="M16 118 Q18 88 42 84 L42 74 L56 74 L56 84 Q80 88 82 118 Z"/>
+  <path class="dash g thin" d="M50 70 Q66 28 96 38"/>
+  <circle class="f-soft" cx="114" cy="52" r="24"/>
+  <path d="M102 46 q4 -5 8 0 M118 46 q4 -5 8 0"/>
+  <path class="f-red" d="M102 58 Q114 74 126 58 Z"/>
+  <text class="t" x="92" y="18">ha</text><text class="t" x="128" y="22">ha</text><text class="t" x="138" y="88">ha!</text>`,
+ long:`<ellipse class="f-soft" cx="80" cy="62" rx="22" ry="50"/>
+  <path class="thin" d="M66 40 l9 4 M94 40 l-9 4"/>
+  <circle class="f-ink ns" cx="72" cy="50" r="2.5"/><circle class="f-ink ns" cx="88" cy="50" r="2.5"/>
+  <path d="M70 96 q10 -8 20 0"/>
+  <path class="thin g" d="M40 30 v60 m-5 -6 l5 6 l5 -6 M120 30 v60 m-5 -6 l5 6 l5 -6"/>`,
+ seat:`<rect class="f-mark" x="122" y="20" width="32" height="46" rx="2"/>
+  <path class="thin dash g" d="M106 44 L120 42"/>
+  <rect class="f-red" x="18" y="34" width="16" height="56" rx="4"/>
+  <rect class="f-red" x="18" y="80" width="62" height="12" rx="4"/>
+  <path d="M26 92 v20 M72 92 v20"/>
+  <circle class="f-soft" cx="97" cy="40" r="10"/>
+  <path d="M93 50 L78 80 L92 92 L96 112 M87 60 L106 62 M89 57 L106 54"/>`,
+ chin:`<g class="g"><circle cx="44" cy="52" r="11"/><path d="M38 62 Q30 76 34 92 l-6 20 M34 92 l8 20 M35 72 l-10 14 M36 72 l8 14"/></g>
+  <circle cx="47" cy="57" r="1.8" style="fill:var(--i-grey);stroke:none"/>
+  <circle class="f-soft" cx="112" cy="32" r="12"/>
+  <path d="M112 44 V84 l-8 26 M112 84 l8 26 M112 54 l-12 16 M112 54 l12 16"/>
+  <circle class="f-ink ns" cx="117" cy="28" r="2"/>
+  <path class="thin" d="M117 37 q4 2 6 -2 M138 36 v-20 m-5 5 l5 -5 l5 5"/>`,
+ cloud:`<path class="g thin f-paper" d="${cloudPath(6,76)}"/>
+  <path class="g thin f-paper" d="${cloudPath(44,86)}"/>
+  <path class="f-soft" d="${cloudPath(86,40)}"/>
+  <text class="t" x="111" y="64" style="font-size:16px">9</text>
+  <circle class="f-mark" cx="116" cy="12" r="7"/>
+  <path class="thin" d="M116 19 v17 M116 25 l-10 -9 M116 25 l10 -9 M116 36 l9 4 l0 6"/>`,
+ skin:`<circle class="dash g" cx="44" cy="34" r="12"/>
+  <path class="dash g" d="M30 112 L32 60 Q44 48 56 60 L58 112 Z"/>
+  <path class="g thin" d="M66 50 h10 M64 62 h14 M66 74 h10"/>
+  <path class="f-soft" d="M104 40 Q112 36 120 40 L122 74 L102 74 Z"/>
+  <path d="M104 46 L88 30 M120 46 L136 28 M106 74 L94 98 M118 74 L134 94"/>
+  <circle class="f-soft" cx="112" cy="26" r="12"/>
+  <circle class="f-ink ns" cx="108" cy="24" r="2"/><circle class="f-ink ns" cx="116" cy="24" r="2"/><circle class="thin" cx="112" cy="31" r="2.5"/>
+  <text class="t" x="132" y="16" style="font-size:20px">!</text>`,
+ stiff:`<path class="thin" d="M68 16 l-4 -9 M76 13 v-10 M84 13 l4 -9 M92 16 l6 -8"/>
+  <circle class="f-soft" cx="80" cy="30" r="15"/>
+  <circle class="f-paper thin" cx="74" cy="28" r="4.5"/><circle class="f-paper thin" cx="86" cy="28" r="4.5"/>
+  <circle class="f-ink ns" cx="74" cy="28" r="1.6"/><circle class="f-ink ns" cx="86" cy="28" r="1.6"/>
+  <circle class="thin" cx="80" cy="38" r="2.5"/>
+  <rect class="f-wood" x="66" y="47" width="28" height="38" rx="2"/>
+  <rect class="f-wood" x="56" y="47" width="8" height="36" rx="2"/><rect class="f-wood" x="96" y="47" width="8" height="36" rx="2"/>
+  <rect class="f-wood" x="68" y="85" width="9" height="30" rx="2"/><rect class="f-wood" x="83" y="85" width="9" height="30" rx="2"/>
+  <path class="g thin" d="M44 50 q-4 6 0 12 q4 6 0 12 M116 50 q4 6 0 12 q-4 6 0 12"/>`,
+ spirits:`<path class="f-mark" d="M68 34 Q66 14 80 10 Q94 6 96 22 Q104 30 94 38 Q84 46 74 40 Q64 42 68 34 Z"/>
+  <circle class="f-ink ns" cx="78" cy="24" r="1.8"/><circle class="f-ink ns" cx="87" cy="24" r="1.8"/>
+  <path class="thin" d="M79 30 q4 3 8 0 M80 47 v6 M72 48 l-2 5 M88 48 l2 5"/>
+  <circle class="f-soft" cx="80" cy="66" r="10"/>
+  <path d="M80 76 V100 M80 82 L64 64 M80 82 L96 64 M80 100 l-10 16 M80 100 l10 16"/>
+  <path class="thin" d="M40 30 v8 M36 34 h8 M122 40 v8 M118 44 h8 M118 12 v6 M115 15 h6"/>`,
+ wall:`<rect class="f-wood" x="104" y="6" width="50" height="110"/>
+  <path class="thin" d="M104 24 H154 M104 42 H154 M104 60 H154 M104 78 H154 M104 96 H154 M129 6 V24 M116 24 V42 M142 24 V42 M129 42 V60 M116 60 V78 M142 60 V78 M129 78 V96 M116 96 V116 M142 96 V116"/>
+  <path d="M6 116 H104"/>
+  <circle class="f-soft" cx="88" cy="34" r="9"/>
+  <path d="M88 43 V72 M88 50 L102 42 M88 56 L102 60 M88 72 L82 90 M88 72 L96 88"/>
+  <path class="thin" d="M70 22 l6 4 M76 16 l2 7"/>
+  <path class="g" d="M66 112 V92 m-6 6 l6 -6 l6 6 M84 114 V102 m-6 6 l6 -6 l6 6"/>`,
+ feet:`<rect class="g thin" x="110" y="10" width="42" height="104"/>
+  <circle class="f-grey ns" cx="118" cy="64" r="3"/>
+  <path class="g thin" d="M30 16 v14 M23 23 h14 M25 18 l10 10 M35 18 l-10 10 M74 10 v10 M69 15 h10 M34 50 q-4 -6 0 -10 M72 44 q-4 -6 0 -10"/>
+  <path class="f-soft" d="M18 56 L18 96 L56 96 Q64 96 64 88 Q64 80 48 78 L42 56 Z"/>
+  <path class="f-soft" d="M54 50 L54 90 L92 90 Q100 90 100 82 Q100 74 84 72 L78 50 Z"/>
+  <path class="thin" d="M24 96 l2 8 l2 -8 M38 96 l2 6 l2 -6 M60 90 l2 8 l2 -8 M76 90 l2 6 l2 -6"/>`,
+ butterflies:`<path class="f-soft" d="M34 118 Q36 52 80 46 Q124 52 126 118 Z"/>
+  <circle class="f-soft" cx="80" cy="24" r="16"/>
+  <circle class="f-ink ns" cx="74" cy="22" r="2"/><circle class="f-ink ns" cx="86" cy="22" r="2"/>
+  <path class="thin" d="M73 31 q3 -2 6 0 q3 2 6 0"/>
+  <circle class="dash g thin" cx="80" cy="88" r="24"/>
+  ${bfly(70,82,-15)}${bfly(91,84,20)}${bfly(80,100,5)}`,
+ dumps:`<path class="f-grey ns" d="M34 30 L46 112 H114 L126 30 Z" opacity=".35"/>
+  <path d="M4 30 H34 L46 112 H114 L126 30 H156"/>
+  <path class="g thin f-paper" d="${cloudPath(50,-2)}"/>
+  <path class="g thin" d="M64 34 l-2 6 M80 36 l-2 6 M96 34 l-2 6"/>
+  <circle class="f-soft" cx="74" cy="80" r="8"/>
+  <circle class="f-ink ns" cx="72" cy="82" r="1.5"/><circle class="f-ink ns" cx="77" cy="82" r="1.5"/>
+  <path d="M74 88 Q70 98 72 110 L86 98 L90 110 M75 93 L86 98"/>
+  <rect class="f-red" x="98" y="96" width="9" height="14" rx="1"/>
+  <circle class="f-paper thin" cx="56" cy="104" r="6"/><path class="hair" d="M52 102 l6 4 M54 108 l4 -6"/>`,
+ handle:`<path class="f-wood" d="M28 112 L38 116 L84 46 L74 42 Z"/>
+  <path class="g thin" d="M88 42 L100 36 M90 52 L104 48 M84 32 L94 24"/>
+  <path class="f-metal" d="M106 46 L120 32 Q136 16 152 26 Q150 46 132 58 L118 56 Z"/>
+  <rect class="f-paper thin" x="112" y="40" width="8" height="12" rx="2" transform="rotate(-40 116 46)"/>
+  <path class="thin" d="M124 8 l4 4 M148 6 l-3 5 M154 46 h-6"/>`
+};
+function svgFor(it, label=true){
+  return `<svg class="illo" viewBox="0 0 160 120" ${label?`role="img" aria-label="${esc(it.img)}"`:'aria-hidden="true"'}>${ART[it.id]}</svg>`;
+}
+
+/* ===================== Хранилище (только этот браузер) ===================== */
+const KEY = "fe-trainer-m1-v1";
+const S = {grade:"9", sr:{}, marks:{}, offset:0, ru:false};
+try{ const raw = localStorage.getItem(KEY); if(raw) Object.assign(S, JSON.parse(raw)); }catch(e){}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+const DAY = 86400000;
+const now = () => Date.now() + S.offset*DAY;
+const INTERVALS = [0, 1, 3, 7, 14]; // ступени 1–4, в днях
+const STEP_NAMES = ["", "через 1 день", "через 3 дня", "через 7 дней", "перед проверочной"];
+function touch(id, ok){ // ФЕ впервые встретилась в любом режиме
+  if(!S.sr[id]){ S.sr[id] = {box:1, due: now() + (ok ? DAY : 0)}; save(); }
+}
+
+/* ===================== Утилиты ===================== */
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
+function pick(arr,n){ return shuffle(arr).slice(0,n); }
+const is9 = () => S.grade === "9";
+const nOpts = () => is9() ? 3 : 4;
+function exHTML(it, mode="mark"){
+  return esc(it.ex).replace(/\[\[(.+?)\]\]/, (_,m)=> mode==="mark" ? `<mark class="mark">${m}</mark>` : `<span class="blank" aria-label="пропуск">&nbsp;</span>`);
+}
+function gapHTML(it){ // пример с пропущенным словом внутри идиомы
+  return esc(it.ex).replace(/\[\[(.+?)\]\]/, (_,m)=>{
+    const re = new RegExp("\\b"+it.gap+"\\b");
+    return m.replace(re, `<span class="blank" aria-label="пропуск">&nbsp;</span>`);
+  });
+}
+function distractors(it, n, pool=IDIOMS){
+  return pick(pool.filter(x=>x.id!==it.id && x.ru!==it.ru), n);
+}
+function norm(s){ return s.toLowerCase().replace(/[’`]/g,"'").replace(/[.,!?;:]+$/,"").replace(/\s+/g," ").trim(); }
+function fmtDate(t){ return new Date(t).toLocaleDateString("ru-RU",{day:"numeric",month:"long"}); }
+function cardLink(it){ return `<a href="${it.url}" target="_blank" rel="noopener">Статья в Cambridge Dictionary</a>`; }
+
+/* ===================== Каркас ===================== */
+const view = document.getElementById("view");
+const instr = document.getElementById("instr");
+let mode = "cards";
+let cleanup = null;
+
+function renderInstr(key){
+  const [en, ru] = INSTR[key];
+  const showRu = is9() || S.ru;
+  instr.innerHTML = `<p class="en" lang="en">${en}</p>${is9() ? "" : `<button type="button" class="linkbtn" id="ru-toggle">${showRu ? "Скрыть перевод" : "Перевод"}</button>`}<p class="ru" ${showRu ? "" : "hidden"}>${ru}</p>`;
+  const t = document.getElementById("ru-toggle");
+  if(t) t.onclick = ()=>{ S.ru = !S.ru; save(); renderInstr(key); };
+}
+function setGradeButtons(){
+  document.getElementById("g9").setAttribute("aria-pressed", String(is9()));
+  document.getElementById("g11").setAttribute("aria-pressed", String(!is9()));
+}
+document.querySelectorAll(".seg button").forEach(b=> b.onclick = ()=>{ S.grade = b.dataset.grade; save(); setGradeButtons(); go(mode); });
+
+const MODES = {cards, picture, origin, gap, mistakes, review, game};
+function go(m){
+  if(cleanup){ cleanup(); cleanup = null; }
+  mode = MODES[m] ? m : "cards";
+  document.querySelectorAll(".modes a").forEach(a=>{ if(a.dataset.mode===mode) a.setAttribute("aria-current","page"); else a.removeAttribute("aria-current"); });
+  view.classList.toggle("game", mode==="game");
+  MODES[mode]();
+}
+window.addEventListener("hashchange", ()=> go(location.hash.slice(1)));
+
+/* ===================== Движок вопросов ===================== */
+/* q.type: "choice" {prompt, options:[{label,ok,en}], explain}
+           "input"  {prompt, accept:[...], answer, explain, hint}
+           "tap"    {tokens, wrong, right, comment} */
+function runQuiz(cfg){
+  const qs = cfg.questions.slice();
+  let i = 0, score = 0, answered = 0; const missed = [];
+  function header(){
+    return `<div class="qhead"><span class="meta">Вопрос ${i+1} из ${qs.length}</span><span class="meta">Верно: ${score}</span></div>
+      <div class="progress" aria-hidden="true"><i style="width:${(i/qs.length*100).toFixed(1)}%"></i></div>`;
+  }
+  function finish(ok, q, fbHTML){
+    answered++;
+    if(ok) score++; else if(q.it && !missed.includes(q.it)) missed.push(q.it);
+    const extra = cfg.onAnswer ? cfg.onAnswer(q, ok) : null;
+    if(extra) qs.push(extra);
+    const fb = view.querySelector(".fb-slot");
+    fb.innerHTML = `<div class="fb ${ok?"ok":"no"}">${fbHTML}</div>
+      <div class="row"><button type="button" class="btn primary" id="next">${i+1 < qs.length ? "Дальше" : "Итог"}</button></div>`;
+    const nx = document.getElementById("next"); nx.focus(); nx.onclick = ()=>{ i++; i < qs.length ? show() : end(); };
+    view.querySelector(".qhead .meta:last-child").textContent = "Верно: " + score;
+  }
+  function show(){
+    const q = qs[i];
+    let body = "";
+    if(q.type === "choice"){
+      body = `<div class="prompt">${q.prompt}</div><div class="opts" style="--cols:${q.cols || (q.options.length===4 ? 2 : q.options.length)}">${q.options.map((o,k)=>`<button type="button" class="opt ${o.en?"en":""}" data-k="${k}" ${o.en?'lang="en"':""}>${esc(o.label)}</button>`).join("")}</div>`;
+    } else if(q.type === "input"){
+      body = `<div class="prompt">${q.prompt}</div>
+        <form class="answer" id="ans-form" autocomplete="off"><label class="label" for="ans" style="flex-basis:100%">Ваш ответ</label>
+        <input id="ans" type="text" lang="en" spellcheck="false" autocapitalize="off">
+        <button class="btn primary" type="submit">Проверить</button><button class="btn quiet" type="button" id="hint">Подсказка</button></form>
+        <p class="meta" id="hint-out" hidden></p>`;
+    } else if(q.type === "tap"){
+      body = `<div class="prompt"><div class="tokens" lang="en">${q.tokens.map((t,k)=>`<button type="button" class="tok" data-k="${k}">${esc(t)}</button>`).join("")}</div></div><div class="step2"></div>`;
+    }
+    view.innerHTML = header() + body + `<div class="fb-slot"></div>`;
+    if(q.type === "choice"){
+      view.querySelectorAll(".opt").forEach(b=> b.onclick = ()=>{
+        const k = +b.dataset.k, ok = q.options[k].ok;
+        view.querySelectorAll(".opt").forEach((x,j)=>{ x.disabled = true; if(q.options[j].ok) x.classList.add("is-right"); });
+        if(!ok) b.classList.add("is-wrong");
+        finish(ok, q, `<p class="verdict">${ok ? "Верно." : "Неверно."}</p>${q.explain}`);
+      });
+    } else if(q.type === "input"){
+      const inp = document.getElementById("ans"); inp.focus();
+      document.getElementById("hint").onclick = ()=>{ const h=document.getElementById("hint-out"); h.hidden=false; h.textContent = q.hint; };
+      document.getElementById("ans-form").onsubmit = (e)=>{
+        e.preventDefault(); if(!inp.value.trim()) return;
+        const ok = q.accept.map(norm).includes(norm(inp.value));
+        inp.disabled = true; e.target.querySelectorAll("button").forEach(b=>b.disabled=true);
+        finish(ok, q, `<p class="verdict">${ok ? "Верно." : "Неверно. Правильно: " + `<i lang="en">${esc(q.answer)}</i>`}</p>${q.explain}`);
+      };
+    } else if(q.type === "tap"){
+      const toks = view.querySelectorAll(".tok");
+      toks.forEach(b=> b.onclick = ()=>{
+        const k = +b.dataset.k; const hit = k === q.wrong;
+        toks.forEach(x=> x.disabled = true);
+        toks[q.wrong].classList.add("is-wrong");
+        if(hit && !is9()){
+          const s2 = view.querySelector(".step2");
+          s2.innerHTML = `<form class="answer" id="fix-form" autocomplete="off"><label class="label" for="fix" style="flex-basis:100%">Ошибка найдена. Напишите идиому правильно</label>
+            <input id="fix" type="text" lang="en" spellcheck="false" autocapitalize="off"><button class="btn primary" type="submit">Проверить</button></form>`;
+          const f = document.getElementById("fix"); f.focus();
+          document.getElementById("fix-form").onsubmit = (e)=>{
+            e.preventDefault(); if(!f.value.trim()) return;
+            const ok = norm(f.value) === norm(q.right);
+            f.disabled = true; e.target.querySelector("button").disabled = true;
+            finish(ok, q, `<p class="verdict">${ok ? "Верно." : "Почти. Правильно: " + `<i lang="en">${esc(q.right)}</i>`}</p><p>${esc(q.comment)}</p>`);
+          };
+        } else {
+          finish(hit, q, `<p class="verdict">${hit ? "Верно, ошибка здесь." : "Ошибка в другом слове."}</p><p>Правильно: <i lang="en">${esc(q.right)}</i>. ${esc(q.comment)}</p>`);
+        }
+      });
+    }
+  }
+  function end(){
+    view.innerHTML = `<div class="result"><p class="label">Итог раунда</p><p class="big">${score} из ${qs.length}</p>
+      ${missed.length ? `<p>Стоит повторить:</p><ul class="missed">${missed.map(it=>`<li lang="en">${esc(it.en)}</li>`).join("")}</ul>` : `<p>Ошибок нет.</p>`}
+      <p class="meta">Все ФЕ из раунда попали в «Повторение».</p>
+      <div class="row"><button type="button" class="btn primary" id="again">Ещё раунд</button><a class="btn quiet" href="#cards">К карточкам</a></div></div>`;
+    document.getElementById("again").onclick = cfg.again;
+  }
+  show();
+}
+
+/* ===================== 1. Карточки ===================== */
+let cardIdx = 0, cardFilter = "all", flipped = false;
+function cards(){
+  renderInstr("cards");
+  const unsure = IDIOMS.filter(i=>S.marks[i.id]==="unsure");
+  const list = cardFilter==="unsure" ? unsure : IDIOMS;
+  if(cardIdx >= list.length) cardIdx = 0;
+  const bar = `<div class="row between"><div class="seg" role="group" aria-label="Какие карточки показывать">
+      <button type="button" data-f="all" aria-pressed="${cardFilter==="all"}">Все 20</button>
+      <button type="button" data-f="unsure" aria-pressed="${cardFilter==="unsure"}">Не уверен: ${unsure.length}</button></div>
+      <span class="meta">${list.length ? (cardIdx+1)+" / "+list.length : ""}</span></div>`;
+  if(!list.length){
+    view.innerHTML = bar + `<p>Пока нет карточек с отметкой «Не уверен». Отметьте их при просмотре всех 20.</p>`;
+  } else {
+    const it = list[cardIdx];
+    const m = S.marks[it.id];
+    const chip = m ? `<span class="chip ${m}">${m==="know" ? "Знаю" : "Не уверен"}</span>` : "";
+    const face = !flipped
+      ? `<div class="card front" id="card" role="button" tabindex="0" aria-label="Перевернуть карточку">
+          <div class="illo-wrap">${svgFor(it)}</div>
+          <h2 class="hw" lang="en">${esc(it.en)}</h2>${chip}
+          <p class="hint">Нажмите на карточку, чтобы увидеть значение</p></div>`
+      : `<div class="card back" id="card">
+          <div class="row between"><h2 class="hw" lang="en">${esc(it.en)}</h2>${chip}</div>
+          <dl class="entry">
+            <dt>Значение</dt><dd class="en-def" lang="en">${esc(it.def)}</dd>
+            <dt>Перевод</dt><dd>${esc(it.ru)} <span class="method">${esc(it.method)}</span></dd>
+            <dt>Пример</dt><dd lang="en">${exHTML(it)}</dd>
+            <dt>Образ</dt><dd>${esc(it.img)}</dd>
+            <dt>Справка</dt><dd>${esc(it.note)}</dd>
+            ${it.syntax ? `<dt>Заметка</dt><dd>${esc(it.syntax)}</dd>` : ""}
+            <dt>Словарь</dt><dd>${cardLink(it)}</dd>
+          </dl></div>`;
+    view.innerHTML = bar + face + `
+      <div class="row between">
+        <div class="row"><button type="button" class="btn" id="prev" aria-label="Предыдущая карточка">← Назад</button>
+        <button type="button" class="btn" id="next-card" aria-label="Следующая карточка">Далее →</button></div>
+        ${flipped ? `<div class="row"><button type="button" class="btn" id="m-unsure">Не уверен</button><button type="button" class="btn primary" id="m-know">Знаю</button></div>`
+                  : `<button type="button" class="btn primary" id="flip">Перевернуть</button>`}
+      </div>`;
+    const flip = ()=>{ flipped = !flipped; cards(); };
+    const step = d=>{ flipped=false; cardIdx = (cardIdx + d + list.length) % list.length; cards(); };
+    const card = document.getElementById("card");
+    if(!flipped){ card.onclick = flip; card.onkeydown = e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); flip(); } }; document.getElementById("flip").onclick = flip; }
+    document.getElementById("prev").onclick = ()=>step(-1);
+    document.getElementById("next-card").onclick = ()=>step(1);
+    const mark = v=>{ S.marks[it.id]=v; touch(it.id, v==="know"); if(v==="unsure" && S.sr[it.id]) S.sr[it.id].due = Math.min(S.sr[it.id].due, now()); save();
+      if(cardFilter==="unsure" && v==="know"){ flipped=false; cards(); } else step(1); };
+    if(flipped){ document.getElementById("m-know").onclick = ()=>mark("know"); document.getElementById("m-unsure").onclick = ()=>mark("unsure"); }
+  }
+  view.querySelectorAll("[data-f]").forEach(b=> b.onclick = ()=>{ cardFilter=b.dataset.f; cardIdx=0; flipped=false; cards(); });
+}
+
+/* ===================== 2. Что на картинке? ===================== */
+function picture(){
+  renderInstr("picture");
+  const qs = pick(IDIOMS, 10).map(it=>({
+    type:"choice", it,
+    prompt:`<div class="illo-wrap">${svgFor(it)}</div>`,
+    options: shuffle([{label:it.en, ok:true, en:true}, ...distractors(it, nOpts()-1).map(d=>({label:d.en, ok:false, en:true}))]),
+    explain:`<p><i lang="en">${esc(it.en)}</i>: ${esc(it.ru)}.</p><p>${esc(it.img)}</p>`
+  }));
+  runQuiz({questions:qs, onAnswer:(q,ok)=>touch(q.it.id, ok), again:picture});
+}
+
+/* ===================== 3. Откуда выражение? ===================== */
+function origin(){
+  renderInstr("origin");
+  const qs = pick(IDIOMS, 10).map(it=>{
+    const [right, ...wrong] = ORIGINS[it.id];
+    return { type:"choice", it, cols:1,
+      prompt:`<h2 class="hw" lang="en">${esc(it.en)}</h2>${is9() ? `<p class="meta">${esc(it.ru)}</p>` : ""}<p class="label" style="margin-top:4px">На чём основан образ?</p>`,
+      options: shuffle([{label:right, ok:true}, ...wrong.map(w=>({label:w, ok:false}))]),
+      explain:`<p class="label">Справка из пособия</p><p>${esc(it.note)}</p><p class="meta">${cardLink(it)}</p>` };
+  });
+  runQuiz({questions:qs, onAnswer:(q,ok)=>touch(q.it.id, ok), again:origin});
+}
+
+/* ===================== 4. Собери выражение ===================== */
+function gapQuestion(it, typed){
+  const prompt = `<p class="sent" lang="en">${gapHTML(it)}</p>${is9() ? `<p class="gloss" lang="en">(${esc(it.def.replace(/\.$/,""))})</p>` : ""}`;
+  const explain = `<p lang="en">${exHTML(it)}</p>${it.syntax && /согласу|дополнени/.test(it.syntax) ? `<p class="meta">${esc(it.syntax)}</p>` : ""}`;
+  if(typed) return {type:"input", it, prompt, accept:[it.gap], answer:it.gap, explain, hint:`Первая буква: ${it.gap[0]}…, букв в слове: ${it.gap.length}`};
+  return {type:"choice", it, prompt, explain,
+    options: shuffle([it.gap, ...it.gapAlt].map((w,k)=>({label:w, ok:k===0, en:true})))};
+}
+function gap(){
+  renderInstr(is9() ? "gap9" : "gap11");
+  runQuiz({questions: pick(IDIOMS,10).map(it=>gapQuestion(it, !is9())), onAnswer:(q,ok)=>touch(q.it.id, ok), again:gap});
+}
+
+/* ===================== 5. Найди ошибку ===================== */
+function mistakeIdiom(m){ return IDIOMS.find(it=> new RegExp("\\b"+it.gap+"\\b","i").test(m.right)) || null; } // ФЕ для учёта в повторении
+function mistakes(){
+  renderInstr(is9() ? "mistakes9" : "mistakes11");
+  const qs = pick(MISTAKES, 10).map(m=>{
+    const tokens = m.s.split(" ");
+    const wrong = tokens.findIndex(t=> norm(t.replace(/^[^\w']+|[^\w']+$/g,"")) === norm(m.w));
+    return {type:"tap", it: mistakeIdiom(m), tokens, wrong, right:m.right, comment:m.c};
+  });
+  runQuiz({questions:qs, onAnswer:(q,ok)=>{ if(q.it) touch(q.it.id, ok); }, again:mistakes});
+}
+
+/* ===================== 6. Повторение по расписанию ===================== */
+let confirmReset = false;
+function reviewTask(it, k){
+  if(is9()){
+    if(k % 2 === 0){
+      const d = distractors(it,1)[0];
+      return {type:"choice", it, prompt:`<p class="label">Выберите русское соответствие</p><h2 class="hw" lang="en">${esc(it.en)}</h2>`,
+        options: shuffle([{label:it.ru, ok:true},{label:d.ru, ok:false}]),
+        explain:`<p><i lang="en">${esc(it.en)}</i>: ${esc(it.ru)} <span class="method">${esc(it.method)}</span></p>`};
+    }
+    return {type:"choice", it, prompt:`<p class="sent" lang="en">${exHTML(it,"blank")}</p><p class="gloss" lang="en">(${esc(it.def.replace(/\.$/,""))})</p>`,
+      options: shuffle([{label:it.en, ok:true, en:true}, ...distractors(it,2).map(d=>({label:d.en, ok:false, en:true}))]),
+      explain:`<p lang="en">${exHTML(it)}</p>`};
+  }
+  if(k % 2 === 0){
+    return {type:"choice", it, prompt:`<p class="sent" lang="en">${exHTML(it,"blank")}</p>`,
+      options: shuffle([{label:it.en, ok:true, en:true}, ...distractors(it,3).map(d=>({label:d.en, ok:false, en:true}))]),
+      explain:`<p lang="en">${exHTML(it)}</p>`};
+  }
+  return gapQuestion(it, true);
+}
+function review(){
+  renderInstr("review");
+  const ids = Object.keys(S.sr);
+  const t = now();
+  const due = ids.filter(id=> S.sr[id].due <= t);
+  const counts = [IDIOMS.length - ids.length, 0,0,0,0];
+  ids.forEach(id=> counts[S.sr[id].box]++);
+  const dueBoxes = new Set(due.map(id=>S.sr[id].box));
+  const next = ids.filter(id=>S.sr[id].due > t).map(id=>S.sr[id].due).sort((a,b)=>a-b)[0];
+  const ladder = `<div class="ladder" aria-label="Ступени повторения">
+    <div class="step"><b>${counts[0]}</b><span>новые, ещё не встречались</span></div>
+    ${[1,2,3,4].map(b=>`<div class="step ${dueBoxes.has(b)?"due":""}"><b>${counts[b]}</b><span>ступень ${b}: ${STEP_NAMES[b]}</span></div>`).join("")}
+  </div>`;
+  let main;
+  if(!ids.length){
+    main = `<p>ФЕ попадают сюда, когда вы впервые встречаете их на карточках или в любом упражнении. Начните с карточек или добавьте сразу весь модуль.</p>
+      <div class="row"><a class="btn" href="#cards">Открыть карточки</a><button type="button" class="btn primary" id="add-all">Добавить все 20 ФЕ</button></div>`;
+  } else if(due.length){
+    main = `<p>Сейчас к повторению: <b>${due.length}</b>. Верный ответ переводит ФЕ на следующую ступень, ошибка возвращает её на первую.</p>
+      <div class="row"><button type="button" class="btn primary" id="start">Начать повторение</button></div>`;
+  } else {
+    main = `<p>На сегодня всё повторено.${next ? ` Следующее повторение: ${fmtDate(next)}.` : ""}</p>`;
+  }
+  const demo = `<div class="demo row between"><span class="meta">${S.offset ? `Демо-часы: ${fmtDate(t)} (+${S.offset} дн.)` : `Сегодня: ${fmtDate(t)}`}</span>
+    <div class="row"><button type="button" class="btn quiet" id="plus-day">Демо: следующий день</button><button type="button" class="btn quiet" id="reset">Сбросить прогресс</button></div></div>
+    ${confirmReset ? `<div class="confirm" role="alertdialog" aria-label="Сброс прогресса"><p style="margin:0">Сбросить все ступени, отметки на карточках и демо-часы? Отменить это нельзя.</p>
+      <div class="row"><button type="button" class="btn" id="reset-no">Отмена</button><button type="button" class="btn primary" id="reset-yes">Сбросить</button></div></div>` : ""}`;
+  view.innerHTML = ladder + main + demo;
+  const on = (id,fn)=>{ const el=document.getElementById(id); if(el) el.onclick=fn; };
+  on("add-all", ()=>{ IDIOMS.forEach(it=>{ if(!S.sr[it.id]) S.sr[it.id]={box:1, due:now()}; }); save(); review(); });
+  on("plus-day", ()=>{ S.offset++; save(); review(); });
+  on("reset", ()=>{ confirmReset = true; review(); });
+  on("reset-no", ()=>{ confirmReset = false; review(); });
+  on("reset-yes", ()=>{ S.sr={}; S.marks={}; S.offset=0; confirmReset=false; save(); review(); });
+  on("start", ()=>{
+    const qs = shuffle(due).map((id,k)=> Object.assign(reviewTask(BY[id], k), {retry:false}));
+    runQuiz({questions:qs, again:review, onAnswer:(q,ok)=>{
+      const r = S.sr[q.it.id];
+      if(ok){ if(!q.retry){ r.box = Math.min(r.box+1, 4); r.due = now() + INTERVALS[r.box]*DAY; } }
+      else { r.box = 1; r.due = now() + DAY; }
+      save();
+      if(!ok && !q.retry) return Object.assign(reviewTask(q.it, 1), {retry:true});
+      return null;
+    }});
+  });
+}
+
+/* ===================== 7. Командная игра ===================== */
+let G = {teams:2, time:30};
+function game(){
+  renderInstr("game");
+  view.innerHTML = `<form class="setup" id="setup">
+    <fieldset><legend>Сколько команд</legend><div class="seg" role="group">${[2,3,4].map(n=>`<button type="button" data-t="${n}" aria-pressed="${G.teams===n}">${n}</button>`).join("")}</div></fieldset>
+    <fieldset><legend>Время на ответ</legend><div class="seg" role="group">${[20,30].map(n=>`<button type="button" data-s="${n}" aria-pressed="${G.time===n}">${n} секунд</button>`).join("")}</div></fieldset>
+    <p class="meta">10 вопросов по модулю: картинка, значение или пример с пропуском. Вариантов ответа: ${nOpts()}. Учителю удобнее выводить игру на интерактивную панель.</p>
+    <div class="row"><button type="submit" class="btn primary">Начать игру</button></div></form>`;
+  view.querySelectorAll("[data-t]").forEach(b=> b.onclick = ()=>{ G.teams=+b.dataset.t; game(); });
+  view.querySelectorAll("[data-s]").forEach(b=> b.onclick = ()=>{ G.time=+b.dataset.s; game(); });
+  document.getElementById("setup").onsubmit = e=>{ e.preventDefault(); playGame(); };
+}
+function playGame(){
+  const items = pick(IDIOMS, 10);
+  const kinds = ["picture","meaning","example"];
+  const qs = items.map((it,k)=>{
+    const kind = kinds[k % 3];
+    const prompt = kind==="picture" ? `<div class="illo-wrap">${svgFor(it,false)}</div><p class="label">Какая идиома на картинке?</p>`
+      : kind==="meaning" ? `<p class="label">Какая идиома значит</p><p class="sent" lang="en"><i>${esc(it.def)}</i></p>`
+      : `<p class="label">Какая идиома пропущена?</p><p class="sent" lang="en">${exHTML(it,"blank")}</p>`;
+    return {it, prompt, options: shuffle([{label:it.en, ok:true}, ...distractors(it, nOpts()-1).map(d=>({label:d.en, ok:false}))])};
+  });
+  const scores = Array(G.teams).fill(0);
+  let i = 0, timer = null, left = 0;
+  cleanup = ()=> clearInterval(timer);
+  function board(){
+    return `<div class="scores">${scores.map((s,k)=>`<div class="team ${k===i%G.teams?"active":""}"><span>Команда ${k+1}</span><b>${s}</b></div>`).join("")}</div>`;
+  }
+  function show(){
+    const q = qs[i], team = i % G.teams;
+    left = G.time;
+    view.innerHTML = board() + `<div class="qhead"><span class="meta">Вопрос ${i+1} из ${qs.length}</span><span class="meta">Отвечает команда ${team+1}</span></div>
+      <div class="timer" aria-label="Оставшееся время"><div class="bar"><i id="tbar" style="width:100%"></i></div><b id="tnum">${left}</b></div>
+      <div class="prompt">${q.prompt}</div>
+      <div class="opts" style="--cols:${q.options.length===4 ? 2 : q.options.length}">${q.options.map((o,k)=>`<button type="button" class="opt en" lang="en" data-k="${k}">${esc(o.label)}</button>`).join("")}</div>
+      <div class="fb-slot"></div>`;
+    const started = Date.now();
+    clearInterval(timer);
+    timer = setInterval(()=>{
+      left = Math.max(0, G.time - Math.floor((Date.now()-started)/1000));
+      const pct = Math.max(0, 100 - (Date.now()-started)/(G.time*10));
+      const bar = document.getElementById("tbar"); if(!bar) return;
+      bar.style.width = pct + "%"; bar.classList.toggle("low", left <= 5);
+      document.getElementById("tnum").textContent = left;
+      if(left === 0) resolve(-1);
+    }, 200);
+    view.querySelectorAll(".opt").forEach(b=> b.onclick = ()=> resolve(+b.dataset.k));
+  }
+  function resolve(k){
+    clearInterval(timer);
+    const q = qs[i], team = i % G.teams;
+    const ok = k >= 0 && q.options[k].ok;
+    if(ok) scores[team]++;
+    view.querySelectorAll(".opt").forEach((x,j)=>{ x.disabled = true; if(q.options[j].ok) x.classList.add("is-right"); if(j===k && !ok) x.classList.add("is-wrong"); });
+    view.querySelectorAll(".team b")[team].textContent = scores[team];
+    view.querySelector(".fb-slot").innerHTML = `<div class="fb ${ok?"ok":"no"}"><p class="verdict">${k<0 ? "Время вышло." : ok ? `Верно! Балл команде ${team+1}.` : "Неверно."}</p>
+      <p><i lang="en">${esc(q.it.en)}</i>: ${esc(q.it.ru)}.</p></div>
+      <div class="row"><button type="button" class="btn primary" id="gnext">${i+1<qs.length ? "Следующий вопрос" : "Итоги"}</button></div>`;
+    const nx = document.getElementById("gnext"); nx.focus();
+    nx.onclick = ()=>{ i++; i < qs.length ? show() : end(); };
+  }
+  function end(){
+    const best = Math.max(...scores);
+    const winners = scores.map((s,k)=>s===best ? k+1 : null).filter(Boolean);
+    view.innerHTML = `<div class="result"><p class="label">Итоги игры</p>
+      <p class="big">${winners.length>1 ? "Ничья" : "Победила команда " + winners[0]}</p>
+      ${board().replace(/ active/g,"")}
+      <div class="row"><button type="button" class="btn primary" id="replay">Сыграть ещё</button><button type="button" class="btn" id="resetup">Настройки</button></div></div>`;
+    document.getElementById("replay").onclick = playGame;
+    document.getElementById("resetup").onclick = game;
+  }
+  show();
+}
+
+/* ===================== Старт ===================== */
+setGradeButtons();
+go(location.hash.slice(1) || "cards");
+</script>
+
+</body>
+</html>
